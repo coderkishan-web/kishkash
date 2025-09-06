@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Melting Button Loader</title>
+    <link rel="stylesheet" href="output.css">
+  </head>
+  <body class="h-auto w-full">
+     <!-- Loader -->
+    <div
+      id="loader"
+      class="fixed inset-0 flex flex-col items-center justify-center bg-[#0d1117] z-50 w-full h-full"
+    >
+      <!-- Background big words -->
+      <div
+        class="absolute inset-0 flex flex-col items-center justify-center text-gray-700 opacity-10 select-none pointer-events-none text-center"
+      >
+        <span class="text-[12rem] font-extrabold leading-none">DON’T</span>
+        <span class="text-[12rem] font-extrabold leading-none -mt-10"
+          >CLICK</span
+        >
+      </div>
+
+      <!-- Button -->
+      <button
+        id="startBtn"
+        class="px-6 py-3 bg-[#a9ff1c] text-black font-bold rounded-lg shadow-lg relative z-10 "
+      >
+        <span>Don’t</span> Click Here
+      </button>
+    </div>
+
+    <!-- Slide -->
+    <div id="slide" class="slide">
+      <h1 id="welcome" class="text-3xl font-bold text-black"></h1>
+      <div
+        class="absolute bottom-4 right-6 text-2xl font-bold text-black"
+        id="counter"
+      >
+        0%
+      </div>
+    </div>
+
+   
+    <!-- Main Content -->
+    <div
+      id="content"
+      class="opacity-0 flex flex-col items-center justify-center h-screen w-full z-50"
+      style="background:url('hero.jpg') no-repeat center/cover ;
+        background-attachment: fixed;"
+    >
+      <h2 class="text-4xl font-bold mb-4 text-green-400"> Well!</h2>
+      <p class="text-xl">Now you are officially inside 🚀</p>
+    </div>
+    <div class="header h-screen w-full bg-red-600 ">
+      
+    </div>
+
+    <!-- Music -->
+    <audio
+      id="bgMusic"
+      src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    ></audio>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="script.js"></script>
+  </body>
+</html>
