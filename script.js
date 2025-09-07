@@ -5,9 +5,9 @@
   const lenis = new Lenis({
     autoRaf: true, // handles RAF automatically
     smooth: true,
-    lerp: 0.1,
+    lerp: 0.09,
   });
-
+  gsap.registerPlugin(ScrollTrigger);
   // Sync Lenis with ScrollTrigger
   lenis.on("scroll", ScrollTrigger.update);
 
@@ -191,24 +191,33 @@
   // CARD STACK SCROLL
   // -------------------------
   const cards = gsap.utils.toArray("#card-stack .card");
-  cards.forEach((card, i) => {
-    gsap.set(card, { zIndex: cards.length - i });
-  });
 
   let tl = gsap.timeline({
     scrollTrigger: {
-      trigger: "#card-stack",
-      start: "top 30%",
-      end: "+=" + cards.length * window.innerHeight,
+      trigger: "#case-studies",
+      start: "top top",
+      end: "+=" + (cards.length * 100) + "%", // enough scroll space
       scrub: true,
       pin: true,
-    },
+    }
   });
 
   cards.forEach((card, i) => {
-    tl.to(card, { yPercent: -100, duration: 1 }, i);
-  });
+    // Bring next card in
+    tl.fromTo(card,
+      { yPercent: 100, scale: 1, opacity: 0 },
+      { yPercent: 0, scale: 1, opacity: 1, duration: 1 },
+      i
+    );
 
+    // Fade & shrink previous card
+    if (i > 0) {
+      tl.to(cards[i - 1],
+        { scale: 0.9, opacity: 0.5, duration: 1 },
+        i
+      );
+    }
+  });
   // -------------------------
   // CUSTOM CURSOR
   // -------------------------
@@ -272,4 +281,33 @@
   });
 
 
-  
+  // discover 
+
+gsap.registerPlugin(ScrollTrigger);
+
+const discover = gsap.timeline({
+  scrollTrigger: {
+    trigger: ".discover", // parent instead of .slide
+    start: "top 20%",     // animate when it enters viewport
+    end: "bottom top",    // defines range of scroll
+    scrub: 2,
+
+  }
+});
+
+discover.to(".slide1", { y: 220, ease: "power1.out" })
+        .to(".slide2", { y: 220, ease: "power1.out" })
+        .to(".slide3", { y: 220, ease: "power1.out" })
+        .to(".slide4", { y: 220, ease: "power1.out" });
+
+        // image sec 
+        gsap.to(".image-section2",{
+          clipPath:"circle(100% at 50% 50% )",
+          scrollTrigger:{
+            trigger : ".image-section > .container",
+            start : "top 20%",
+            end : "bottom bottom",
+            scrub :2,
+            pin : true 
+          }
+        })
