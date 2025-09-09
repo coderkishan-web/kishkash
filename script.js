@@ -311,3 +311,21 @@ discover.to(".slide1", { y: 220, ease: "power1.out" })
             pin : true 
           }
         })
+
+
+        // audio 
+         const audio = document.getElementById("bgMusic");
+  const btn = document.getElementById("playPauseBtn");
+
+  // Set default volume lower (0.0 to 1.0)
+  audio.volume = 0.3;
+
+  btn.addEventListener("click", () => {
+    if (audio.paused) {
+      audio.play();
+      btn.innerHTML = `<i class="fas fa-pause text-2xl"></i>`; // Pause icon
+    } else {
+      audio.pause();
+      btn.innerHTML = `<i class="fas fa-play text-2xl"></i>`; // Play icon
+    }
+  });
