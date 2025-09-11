@@ -161,21 +161,66 @@
   });
 
   // ScrollTrigger: center logo scaling
-  gsap.fromTo(
-    "#nav-center",
-    { scale: 4, y: -150 },
-    {
-      scale: 1,
-      y: 0,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: "body",
-        start: "top top",
-        end: "20% top",
-        scrub: true,
-      },
-    }
-  );
+
+
+ScrollTrigger.matchMedia({
+  // Desktop
+  "(min-width: 1024px)": function () {
+    gsap.fromTo(
+      "#nav-center",
+      { scale: 4, y: -150 },
+      {
+        scale: 1,
+        y: 0,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top",
+          end: "20% top",
+          scrub: true,
+        },
+      }
+    );
+  },
+
+  // Tablet
+  "(min-width: 768px) and (max-width: 1023px)": function () {
+    gsap.fromTo(
+      "#nav-center",
+      { scale: 3, y: -150 },
+      {
+        scale: 1,
+        y: 0,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top",
+          end: "20% top",
+          scrub: true,
+        },
+      }
+    );
+  },
+
+  // Mobile
+  "(max-width: 767px)": function () {
+    gsap.fromTo(
+      "#nav-center",
+      { scale: 2, y: -100 },
+      {
+        scale: 1,
+        y: 0,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top",
+          end: "20% top",
+          scrub: true,
+        },
+      }
+    );
+  },
+});
 
   // -------------------------
   // CIRCULAR TEXT
@@ -329,3 +374,6 @@ discover.to(".slide1", { y: 220, ease: "power1.out" })
       btn.innerHTML = `<i class="fas fa-play text-2xl"></i>`; // Play icon
     }
   });
+
+
+
