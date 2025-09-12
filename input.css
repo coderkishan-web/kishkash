@@ -26,7 +26,7 @@
         transition: left 1s ease;
       }
       .slide-up {
-        top: -100% !important;
+        top: -200% !important;
         transition: top 1s ease;
       }
 
