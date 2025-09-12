@@ -318,55 +318,44 @@ if (text && typeof CircleType !== 'undefined') {
 // CARD STACK SCROLL (FIXED FOR MOBILE)
 // -------------------------
 function setupCardStack() {
+ 
+ 
+
   const cards = gsap.utils.toArray("#card-stack .card");
   
-  if (cards.length === 0) {
-    console.log("No cards found");
-    return;
-  }
-
-  // Ensure cards are properly positioned initially
-  gsap.set(cards, { yPercent: 100, scale: 1, opacity: 0 });
-  gsap.set(cards[0], { yPercent: 0, opacity: 1 }); // Show first card
-
-  const cardTimeline = gsap.timeline({
+  let tl = gsap.timeline({
     scrollTrigger: {
       trigger: "#case-studies",
       start: "top top",
-      end: `+=${cards.length * 50}%`,
-      scrub: 1,
+      end: "+=" + (cards.length * 100) + "%", // enough scroll space
+      scrub: true,
       pin: true,
-      anticipatePin: 1,
-      invalidateOnRefresh: true,
-      refreshPriority: -1,
-      onRefresh: () => {
-        console.log("Card stack refreshed");
-      }
+       anticipatePin: 1,
+        invalidateOnRefresh: true,
+        refreshPriority: -1,
     }
   });
-
+  
   cards.forEach((card, i) => {
+    tl.fromTo(card,
+      { yPercent: 100, scale: 1, opacity: 0 },
+      { yPercent: 0, scale: 1, opacity: 1, duration: 1 },
+      i
+    );
     if (i > 0) {
-      cardTimeline.fromTo(card,
-        { yPercent: 100, scale: 1, opacity: 0 },
-        { yPercent: 0, scale: 1, opacity: 1, duration: 1, ease: "power2.out" },
-        i * 0.8
+      tl.to(cards[i - 1],
+        { scale: 0.9, opacity: 0.5, duration: 1 },
+        i
       );
-      
-      if (i > 1) {
-        cardTimeline.to(cards[i - 1],
-          { scale: 0.9, opacity: 0.6, duration: 1, ease: "power2.out" },
-          i * 0.8
-        );
-      }
     }
   });
 }
 
-// Setup card stack after content loads
-setTimeout(() => {
+
+
+
   setupCardStack();
-}, 1000);
+
 
 // -------------------------
 // CUSTOM CURSOR (DESKTOP ONLY)
@@ -446,7 +435,7 @@ function setupDiscoverSection() {
   const discover = gsap.timeline({
   scrollTrigger: {
     trigger: ".discover",
-    start: "top 10%",
+    start: "top 40%",
     end: "bottom top",
     scrub: 2,
   

@@ -1693,15 +1693,6 @@ html {
 #content {
   transition: opacity 1s ease;
 }
-.loading #card-stack .card {
-  opacity: 0;
-  transform: translateY(10px);
-}
-.loaded #card-stack .card {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
 @property --tw-rotate-x {
   syntax: "*";
   inherits: false;
