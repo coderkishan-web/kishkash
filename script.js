@@ -1,15 +1,22 @@
 
-  // -------------------------
-  // LENIS + SCROLLTRIGGER SYNC
-  // -------------------------
-  const lenis = new Lenis({
-    autoRaf: true, // handles RAF automatically
-    smooth: true,
-    lerp: 0.09,
-  });
-  gsap.registerPlugin(ScrollTrigger);
-  // Sync Lenis with ScrollTrigger
-  lenis.on("scroll", ScrollTrigger.update);
+// -------------------------
+// LENIS + SCROLLTRIGGER SYNC
+// -------------------------
+const lenis = new Lenis({
+  autoRaf: true, // handles RAF automatically
+  smooth: true,
+  lerp: 0.09,
+});
+gsap.registerPlugin(ScrollTrigger);
+
+// Sync Lenis with ScrollTrigger
+lenis.on("scroll", ScrollTrigger.update);
+
+// --- IMPORTANT FIX for mobile/tablet smooth scroll ---
+gsap.ticker.add((time) => {
+  lenis.raf(time * 1000); // GSAP gives seconds → Lenis needs ms
+});
+gsap.ticker.lagSmoothing(0); // avoid frame skipping
 
   // -------------------------
   // START BUTTON / LOADER
