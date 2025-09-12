@@ -2,41 +2,24 @@
 // LENIS + SCROLLTRIGGER SYNC
 // -------------------------
 const lenis = new Lenis({
-  autoRaf: true, // we’ll still drive with GSAP ticker for reliability
   smooth: true,
   lerp: 0.09,
 });
+
+// GSAP + ScrollTrigger sync
 gsap.registerPlugin(ScrollTrigger);
 
-const doc = document.documentElement;
-
-ScrollTrigger.scrollerProxy(doc, {
-  scrollTop(value) {
-    return arguments.length
-      ? lenis.scrollTo(value)
-      : window.scrollY || doc.scrollTop;
-  },
-  getBoundingClientRect() {
-    return {
-      top: 0,
-      left: 0,
-      width: window.innerWidth,
-      height: window.innerHeight,
-    };
-  },
-  pinType: doc.style.transform ? "transform" : "fixed",
-});
-
-// Keep things in sync
+// Update ScrollTrigger on Lenis scroll
 lenis.on("scroll", ScrollTrigger.update);
-gsap.ticker.add((time) => {
-  lenis.raf(time * 1000);
-});
-gsap.ticker.lagSmoothing(0);
 
-// Refresh after setup
-ScrollTrigger.addEventListener("refresh", () => lenis.update());
-ScrollTrigger.refresh();
+// RAF loop (essential for mobile, tablet, desktop)
+function raf(time) {
+  lenis.raf(time);
+  requestAnimationFrame(raf);
+}
+requestAnimationFrame(raf);
+
+console.log("Lenis initialized ✅");
 
 // -------------------------
 // START BUTTON / LOADER
@@ -125,8 +108,6 @@ startBtn.addEventListener("click", () => {
       slide.classList.add("slide-up");
       setTimeout(() => {
         content.classList.add("opacity-100");
-        // ✅ refresh after content is visible
-        ScrollTrigger.refresh();
       }, 600);
     }, 2500);
   }, 1600);
@@ -188,30 +169,26 @@ closeBtn.addEventListener("click", () => {
 });
 
 // -------------------------
-// NAV CENTER SCROLL SCALE
+// SCROLLTRIGGER NAV CENTER
 // -------------------------
 ScrollTrigger.matchMedia({
-  // Desktop
   "(min-width: 1024px)": function () {
     gsap.fromTo(
-    "#nav-center",
-    { scale: 4, y: -150 },  // initial state
-    {
-      scale: 1,
-      y: 0,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: "body",    // start animation on page scroll
-        start: "top top",   // when top of body hits top of viewport
-        end: "20% top",     // animation completes at 20% scroll
-        scrub: true,        // smooth scrubbing
-        markers: false      // change to true for debug
-      },
-    }
+      "#nav-center",
+      { scale: 4, y: -150 },
+      {
+        scale: 1,
+        y: 0,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top",
+          end: "20% top",
+          scrub: true,
+        },
+      }
     );
   },
-
-  // Tablet
   "(min-width: 768px) and (max-width: 1023px)": function () {
     gsap.fromTo(
       "#nav-center",
@@ -229,8 +206,6 @@ ScrollTrigger.matchMedia({
       }
     );
   },
-
-  // Mobile
   "(max-width: 767px)": function () {
     gsap.fromTo(
       "#nav-center",
@@ -249,7 +224,6 @@ ScrollTrigger.matchMedia({
     );
   },
 });
-ScrollTrigger.refresh();
 
 // -------------------------
 // CIRCULAR TEXT
@@ -270,25 +244,20 @@ let tl = gsap.timeline({
   scrollTrigger: {
     trigger: "#case-studies",
     start: "top top",
-    end: "+=" + cards.length * 100 + "%", // enough scroll space
+    end: "+=" + (cards.length * 100) + "%", // enough scroll space
     scrub: true,
     pin: true,
-  },
+  }
 });
 
 cards.forEach((card, i) => {
-  // Bring next card in
-  tl.fromTo(
-    card,
+  tl.fromTo(card,
     { yPercent: 100, scale: 1, opacity: 0 },
     { yPercent: 0, scale: 1, opacity: 1, duration: 1 },
     i
   );
-
-  // Fade & shrink previous card
   if (i > 0) {
-    tl.to(
-      cards[i - 1],
+    tl.to(cards[i - 1],
       { scale: 0.9, opacity: 0.5, duration: 1 },
       i
     );
@@ -299,10 +268,8 @@ cards.forEach((card, i) => {
 // CUSTOM CURSOR
 // -------------------------
 const cursor = document.getElementById("cursor");
-let mouseX = 0,
-  mouseY = 0;
-let cursorX = 0,
-  cursorY = 0;
+let mouseX = 0, mouseY = 0;
+let cursorX = 0, cursorY = 0;
 
 document.addEventListener("mousemove", (e) => {
   mouseX = e.clientX;
@@ -321,15 +288,12 @@ animateCursor();
 document.addEventListener("mousedown", () => {
   cursor.classList.add("cursor-active", "cursor-pulse");
 });
-
 document.addEventListener("mouseup", () => {
   cursor.classList.remove("cursor-active");
 });
-
 cursor.addEventListener("animationend", () => {
   cursor.classList.remove("cursor-pulse");
 });
-
 document.querySelectorAll("a, button").forEach((el) => {
   el.addEventListener("mouseenter", () =>
     cursor.classList.add("cursor-active")
@@ -339,12 +303,8 @@ document.querySelectorAll("a, button").forEach((el) => {
   );
 });
 
-// -------------------------
-// WORDS REVEAL ON SCROLL
-// -------------------------
 gsap.utils.toArray(".word").forEach((el) => {
-  gsap.fromTo(
-    el,
+  gsap.fromTo(el,
     { y: 100, opacity: 0 },
     {
       y: 0,
@@ -355,13 +315,13 @@ gsap.utils.toArray(".word").forEach((el) => {
         start: "top 80%",
         end: "top 20%",
         scrub: true,
-      },
+      }
     }
   );
 });
 
 // -------------------------
-// DISCOVER SLIDES
+// DISCOVER SECTION
 // -------------------------
 const discover = gsap.timeline({
   scrollTrigger: {
@@ -369,36 +329,32 @@ const discover = gsap.timeline({
     start: "top 20%",
     end: "bottom top",
     scrub: 2,
-  },
+  }
+});
+discover.to(".slide1", { y: 220, ease: "power1.out" })
+        .to(".slide2", { y: 220, ease: "power1.out" })
+        .to(".slide3", { y: 220, ease: "power1.out" })
+        .to(".slide4", { y: 220, ease: "power1.out" });
+
+// -------------------------
+// IMAGE SECTION
+// -------------------------
+gsap.to(".image-section2",{
+  clipPath:"circle(100% at 50% 50% )",
+  scrollTrigger:{
+    trigger : ".image-section > .container",
+    start : "top 20%",
+    end : "bottom bottom",
+    scrub :2,
+    pin : true 
+  }
 });
 
-discover
-  .to(".slide1", { y: 220, ease: "power1.out" })
-  .to(".slide2", { y: 220, ease: "power1.out" })
-  .to(".slide3", { y: 220, ease: "power1.out" })
-  .to(".slide4", { y: 220, ease: "power1.out" });
-
 // -------------------------
-// IMAGE SECTION REVEAL
-// -------------------------
-gsap.to(".image-section2", {
-  clipPath: "circle(100% at 50% 50%)",
-  scrollTrigger: {
-    trigger: ".image-section > .container",
-    start: "top 20%",
-    end: "bottom bottom",
-    scrub: 2,
-    pin: true,
-  },
-});
-
-// -------------------------
-// AUDIO PLAYER
+// AUDIO
 // -------------------------
 const audio = document.getElementById("bgMusic");
 const btn = document.getElementById("playPauseBtn");
-
-// Set default volume lower
 audio.volume = 0.3;
 
 btn.addEventListener("click", () => {
