@@ -8,14 +8,35 @@ const lenis = new Lenis({
 });
 gsap.registerPlugin(ScrollTrigger);
 
-// Sync Lenis with ScrollTrigger
-lenis.on("scroll", ScrollTrigger.update);
+const doc = document.documentElement;
 
-// --- IMPORTANT FIX for mobile/tablet smooth scroll ---
-gsap.ticker.add((time) => {
-  lenis.raf(time * 1000); // GSAP gives seconds → Lenis needs ms
+ScrollTrigger.scrollerProxy(doc, {
+  scrollTop(value) {
+    return arguments.length
+      ? lenis.scrollTo(value)
+      : window.scrollY || doc.scrollTop;
+  },
+  getBoundingClientRect() {
+    return {
+      top: 0,
+      left: 0,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  },
+  pinType: doc.style.transform ? "transform" : "fixed",
 });
-gsap.ticker.lagSmoothing(0); // avoid frame skipping
+
+// Keep things in sync
+lenis.on("scroll", ScrollTrigger.update);
+gsap.ticker.add((time) => {
+  lenis.raf(time * 1000);
+});
+gsap.ticker.lagSmoothing(0);
+
+// Refresh after setup
+ScrollTrigger.addEventListener("refresh", () => lenis.update());
+ScrollTrigger.refresh();
 
 // -------------------------
 // START BUTTON / LOADER
@@ -173,19 +194,20 @@ ScrollTrigger.matchMedia({
   // Desktop
   "(min-width: 1024px)": function () {
     gsap.fromTo(
-      "#nav-center",
-      { scale: 4, y: -150 },
-      {
-        scale: 1,
-        y: 0,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: "body",
-          start: "top top",
-          end: "20% top",
-          scrub: true,
-        },
-      }
+    "#nav-center",
+    { scale: 4, y: -150 },  // initial state
+    {
+      scale: 1,
+      y: 0,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: "body",    // start animation on page scroll
+        start: "top top",   // when top of body hits top of viewport
+        end: "20% top",     // animation completes at 20% scroll
+        scrub: true,        // smooth scrubbing
+        markers: false      // change to true for debug
+      },
+    }
     );
   },
 
