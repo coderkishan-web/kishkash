@@ -1,25 +1,62 @@
 // -------------------------
-// LENIS + SCROLLTRIGGER SYNC
+// IMPROVED MOBILE DETECTION & LENIS SETUP
 // -------------------------
-const lenis = new Lenis({
-  smooth: true,
-  lerp: 0.09,
-});
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 
-// GSAP + ScrollTrigger sync
+function isTouchDevice() {
+  return window.innerWidth <= 1024 || 'ontouchstart' in window;
+}
+
+// Initialize Lenis with better mobile handling
+let lenis;
+if (!isMobileDevice()) {
+  lenis = new Lenis({
+    smooth: true,
+    lerp: 0.08,
+    wheelMultiplier: 1,
+    touchMultiplier: 2,
+    infinite: false,
+  });
+} else {
+  // For mobile, we'll use a lighter version or disable completely
+  console.log("Mobile device detected - using native scroll");
+}
+
+// GSAP + ScrollTrigger setup
 gsap.registerPlugin(ScrollTrigger);
 
-// Update ScrollTrigger on Lenis scroll
-lenis.on("scroll", ScrollTrigger.update);
+// Better ScrollTrigger defaults for mobile
+ScrollTrigger.defaults({
+  toggleActions: "play none none reverse",
+  scroller: isMobileDevice() ? window : undefined,
+});
 
-// RAF loop (essential for mobile, tablet, desktop)
+// Update ScrollTrigger on Lenis scroll (desktop only)
+if (lenis) {
+  lenis.on("scroll", ScrollTrigger.update);
+}
+
+// Optimized RAF loop
 function raf(time) {
-  lenis.raf(time);
+  if (lenis) {
+    lenis.raf(time);
+  }
   requestAnimationFrame(raf);
 }
 requestAnimationFrame(raf);
 
-console.log("Lenis initialized ✅");
+// Enhanced resize handler
+let resizeTimeout;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    ScrollTrigger.refresh();
+  }, 250);
+});
+
+console.log("Scroll system initialized ✅");
 
 // -------------------------
 // START BUTTON / LOADER
@@ -34,9 +71,10 @@ const bgMusic = document.getElementById("bgMusic");
 
 // Setup welcome letters
 const message = "Welcome To The Arena";
+welcome.innerHTML = "";
 message.split("").forEach((ch) => {
   const span = document.createElement("span");
-  span.textContent = ch;
+  span.textContent = ch === " " ? "\u00A0" : ch;
   span.style.display = "inline-block";
   span.style.opacity = 0;
   welcome.appendChild(span);
@@ -46,54 +84,67 @@ message.split("").forEach((ch) => {
 function animateWelcome() {
   gsap.fromTo(
     "#welcome span",
-    { opacity: 0, scale: 0, y: 80, rotationX: 180 },
+    { opacity: 0, scale: 0, y: 50, rotationX: 90 },
     {
       opacity: 1,
       scale: 1,
       y: 0,
       rotationX: 0,
-      duration: 0.8,
-      ease: "back",
-      stagger: 0.05,
+      duration: 0.6,
+      ease: "back.out(1.7)",
+      stagger: 0.03,
     }
   );
 }
 
-// Counter
+// Counter with better performance
 function startCounter() {
   let count = 0;
-  const interval = setInterval(() => {
-    count++;
-    counter.innerText = count + "%";
-    if (count >= 100) clearInterval(interval);
-  }, 20);
+  const duration = 2000; // 2 seconds
+  const increment = 100 / (duration / 16); // 60fps
+  
+  function updateCounter() {
+    count += increment;
+    if (count >= 100) {
+      counter.innerText = "100%";
+      return;
+    }
+    counter.innerText = Math.floor(count) + "%";
+    requestAnimationFrame(updateCounter);
+  }
+  updateCounter();
 }
 
-// Button melt
+// Button melt effect
 function meltButton(element) {
-  gsap.to(element, {
+  const tl = gsap.timeline();
+  tl.to(element, {
     duration: 0.4,
     scaleX: 1.1,
     scaleY: 0.9,
     ease: "power1.inOut",
-  });
-  gsap.to(element, {
+  })
+  .to(element, {
     duration: 1.2,
     y: 120,
     skewX: 40,
     scaleY: 0.2,
     opacity: 0,
     ease: "power4.in",
-    delay: 0.3,
     onComplete: () => {
       element.style.display = "none";
     },
-  });
+  }, 0.3);
 }
 
 startBtn.addEventListener("click", () => {
   meltButton(startBtn);
-  bgMusic.play();
+  
+  // Handle audio play
+  const playPromise = bgMusic.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(e => console.log("Audio play failed:", e));
+  }
 
   setTimeout(() => {
     loader.style.display = "none";
@@ -107,7 +158,10 @@ startBtn.addEventListener("click", () => {
     setTimeout(() => {
       slide.classList.add("slide-up");
       setTimeout(() => {
-        content.classList.add("opacity-100");
+        content.style.opacity = "1";
+        content.classList.remove("opacity-0");
+        // Force refresh after content loads
+        ScrollTrigger.refresh();
       }, 600);
     }, 2500);
   }, 1600);
@@ -121,214 +175,281 @@ const closeBtn = document.getElementById("close-btn");
 const menu = document.getElementById("menu");
 
 window.addEventListener("load", () => {
-  gsap.from("#nav-left li", {
+  // Navigation animations
+  const navTl = gsap.timeline({ delay: 0.5 });
+  
+  navTl.from("#nav-left li", {
     opacity: 0,
-    y: -30,
-    duration: 0.6,
+    y: -20,
+    duration: 0.4,
     stagger: 0.1,
-    ease: "power3.out",
-  });
-  gsap.from("#nav-center", {
+    ease: "power2.out",
+  })
+  .from("#nav-center", {
     opacity: 0,
     scale: 0.8,
-    duration: 0.8,
-    delay: 0.3,
-    ease: "back.out(1.7)",
-  });
-  gsap.from("#nav-right li", {
-    opacity: 0,
-    y: -30,
     duration: 0.6,
+    ease: "back.out(1.7)",
+  }, "-=0.2")
+  .from("#nav-right li", {
+    opacity: 0,
+    y: -20,
+    duration: 0.4,
     stagger: 0.1,
-    delay: 0.5,
-    ease: "power3.out",
-  });
+    ease: "power2.out",
+  }, "-=0.4");
+  
+  // Ensure ScrollTrigger works properly
+  setTimeout(() => {
+    ScrollTrigger.refresh();
+  }, 100);
 });
 
+// Mobile menu handlers
 menuBtn.addEventListener("click", () => {
   menu.classList.remove("hidden");
-  gsap.fromTo(
-    menu,
-    { x: "100%" },
-    { x: "0%", duration: 0.6, ease: "power4.out" }
-  );
-  gsap.fromTo(
-    "#menu a",
-    { opacity: 0, y: 30 },
-    { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, delay: 0.2 }
+  const menuTl = gsap.timeline();
+  
+  menuTl.fromTo(menu, 
+    { x: "100%" }, 
+    { x: "0%", duration: 0.5, ease: "power3.out" }
+  )
+  .fromTo("#menu a", 
+    { opacity: 0, y: 20 }, 
+    { opacity: 1, y: 0, duration: 0.3, stagger: 0.1 }, 
+    "-=0.2"
   );
 });
 
 closeBtn.addEventListener("click", () => {
   gsap.to(menu, {
     x: "100%",
-    duration: 0.5,
-    ease: "power4.in",
+    duration: 0.4,
+    ease: "power3.in",
     onComplete: () => menu.classList.add("hidden"),
   });
 });
 
 // -------------------------
-// SCROLLTRIGGER NAV CENTER
+// SCROLLTRIGGER NAV CENTER (FIXED)
 // -------------------------
-ScrollTrigger.matchMedia({
-  "(min-width: 1024px)": function () {
-    gsap.fromTo(
-      "#nav-center",
-      { scale: 4, y: -150 },
-      {
+// Wait for content to be visible before setting up nav animation
+function setupNavAnimation() {
+  ScrollTrigger.matchMedia({
+    "(min-width: 1024px)": function () {
+      gsap.set("#nav-center", { scale: 4, y: -150 });
+      gsap.to("#nav-center", {
         scale: 1,
         y: 0,
         ease: "power2.out",
         scrollTrigger: {
-          trigger: "body",
+          trigger: "#content",
           start: "top top",
           end: "20% top",
-          scrub: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
         },
-      }
-    );
-  },
-  "(min-width: 768px) and (max-width: 1023px)": function () {
-    gsap.fromTo(
-      "#nav-center",
-      { scale: 3, y: -150 },
-      {
+      });
+    },
+    "(min-width: 768px) and (max-width: 1023px)": function () {
+      gsap.set("#nav-center", { scale: 3, y: -150 });
+      gsap.to("#nav-center", {
         scale: 1,
         y: 0,
         ease: "power2.out",
         scrollTrigger: {
-          trigger: "body",
+          trigger: "#content",
           start: "top top",
           end: "20% top",
-          scrub: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
         },
-      }
-    );
-  },
-  "(max-width: 767px)": function () {
-    gsap.fromTo(
-      "#nav-center",
-      { scale: 2, y: -100 },
-      {
+      });
+    },
+    "(max-width: 767px)": function () {
+      gsap.set("#nav-center", { scale: 2, y: -100 });
+      gsap.to("#nav-center", {
         scale: 1,
         y: 0,
         ease: "power2.out",
         scrollTrigger: {
-          trigger: "body",
+          trigger: "#content",
           start: "top top",
           end: "20% top",
-          scrub: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
         },
-      }
-    );
-  },
-});
+      });
+    },
+  });
+}
+
+// Delay nav animation setup until after loader
+setTimeout(() => {
+  setupNavAnimation();
+}, 5000);
 
 // -------------------------
-// CIRCULAR TEXT
+// CIRCULAR TEXT (OPTIMIZED)
 // -------------------------
 const text = document.getElementById("text");
-const rotate = new CircleType(text).radius(50);
+let circleType;
 
-window.addEventListener("scroll", () => {
-  text.style.transform = "rotate(" + window.scrollY * 0.15 + "deg)";
-});
-
-// -------------------------
-// CARD STACK SCROLL
-// -------------------------
-const cards = gsap.utils.toArray("#card-stack .card");
-
-let tl = gsap.timeline({
-  scrollTrigger: {
-    trigger: "#case-studies",
-    start: "top top",
-    end: "+=" + (cards.length * 100) + "%", // enough scroll space
-    scrub: true,
-    pin: true,
+if (text && typeof CircleType !== 'undefined') {
+  circleType = new CircleType(text);
+  circleType.radius(isTouchDevice() ? 35 : 50);
+  
+  let rotationFrame;
+  function updateTextRotation() {
+    if (text) {
+      text.style.transform = `rotate(${window.scrollY * 0.1}deg)`;
+    }
+    rotationFrame = null;
   }
-});
-
-cards.forEach((card, i) => {
-  tl.fromTo(card,
-    { yPercent: 100, scale: 1, opacity: 0 },
-    { yPercent: 0, scale: 1, opacity: 1, duration: 1 },
-    i
-  );
-  if (i > 0) {
-    tl.to(cards[i - 1],
-      { scale: 0.9, opacity: 0.5, duration: 1 },
-      i
-    );
-  }
-});
-
-// -------------------------
-// CUSTOM CURSOR
-// -------------------------
-const cursor = document.getElementById("cursor");
-let mouseX = 0, mouseY = 0;
-let cursorX = 0, cursorY = 0;
-
-document.addEventListener("mousemove", (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-});
-
-function animateCursor() {
-  cursorX += (mouseX - cursorX) * 0.15;
-  cursorY += (mouseY - cursorY) * 0.15;
-  cursor.style.left = cursorX + "px";
-  cursor.style.top = cursorY + "px";
-  requestAnimationFrame(animateCursor);
+  
+  window.addEventListener("scroll", () => {
+    if (!rotationFrame) {
+      rotationFrame = requestAnimationFrame(updateTextRotation);
+    }
+  }, { passive: true });
 }
-animateCursor();
 
-document.addEventListener("mousedown", () => {
-  cursor.classList.add("cursor-active", "cursor-pulse");
-});
-document.addEventListener("mouseup", () => {
-  cursor.classList.remove("cursor-active");
-});
-cursor.addEventListener("animationend", () => {
-  cursor.classList.remove("cursor-pulse");
-});
-document.querySelectorAll("a, button").forEach((el) => {
-  el.addEventListener("mouseenter", () =>
-    cursor.classList.add("cursor-active")
-  );
-  el.addEventListener("mouseleave", () =>
-    cursor.classList.remove("cursor-active")
-  );
-});
+// -------------------------
+// CARD STACK SCROLL (FIXED FOR MOBILE)
+// -------------------------
+function setupCardStack() {
+  const cards = gsap.utils.toArray("#card-stack .card");
+  
+  if (cards.length === 0) {
+    console.log("No cards found");
+    return;
+  }
 
-gsap.utils.toArray(".word").forEach((el) => {
-  gsap.fromTo(el,
-    { y: 100, opacity: 0 },
-    {
-      y: 0,
-      opacity: 1,
-      ease: "power2.out",
-      scrollTrigger: {
-        trigger: el,
-        start: "top 80%",
-        end: "top 20%",
-        scrub: true,
+  // Ensure cards are properly positioned initially
+  gsap.set(cards, { yPercent: 100, scale: 1, opacity: 0 });
+  gsap.set(cards[0], { yPercent: 0, opacity: 1 }); // Show first card
+
+  const cardTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: "#case-studies",
+      start: "top top",
+      end: `+=${cards.length * 50}%`,
+      scrub: 1,
+      pin: true,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      refreshPriority: -1,
+      onRefresh: () => {
+        console.log("Card stack refreshed");
       }
     }
-  );
-});
+  });
+
+  cards.forEach((card, i) => {
+    if (i > 0) {
+      cardTimeline.fromTo(card,
+        { yPercent: 100, scale: 1, opacity: 0 },
+        { yPercent: 0, scale: 1, opacity: 1, duration: 1, ease: "power2.out" },
+        i * 0.8
+      );
+      
+      if (i > 1) {
+        cardTimeline.to(cards[i - 1],
+          { scale: 0.9, opacity: 0.6, duration: 1, ease: "power2.out" },
+          i * 0.8
+        );
+      }
+    }
+  });
+}
+
+// Setup card stack after content loads
+setTimeout(() => {
+  setupCardStack();
+}, 1000);
+
+// -------------------------
+// CUSTOM CURSOR (DESKTOP ONLY)
+// -------------------------
+if (!isTouchDevice()) {
+  const cursor = document.getElementById("cursor");
+  if (cursor) {
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    }, { passive: true });
+
+    function animateCursor() {
+      const ease = 0.15;
+      cursorX += (mouseX - cursorX) * ease;
+      cursorY += (mouseY - cursorY) * ease;
+      cursor.style.left = cursorX + "px";
+      cursor.style.top = cursorY + "px";
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Cursor interactions
+    document.addEventListener("mousedown", () => {
+      cursor.classList.add("cursor-active", "cursor-pulse");
+    });
+    document.addEventListener("mouseup", () => {
+      cursor.classList.remove("cursor-active");
+    });
+    cursor.addEventListener("animationend", () => {
+      cursor.classList.remove("cursor-pulse");
+    });
+    
+    // Hover effects
+    document.querySelectorAll("a, button").forEach((el) => {
+      el.addEventListener("mouseenter", () => cursor.classList.add("cursor-active"));
+      el.addEventListener("mouseleave", () => cursor.classList.remove("cursor-active"));
+    });
+  }
+} else {
+  // Hide cursor on touch devices
+  const cursor = document.getElementById("cursor");
+  if (cursor) cursor.style.display = "none";
+}
+
+// -------------------------
+// WORD ANIMATIONS (OPTIMIZED)needed to be update
+// -------------------------
+function setupWordAnimations() {
+  gsap.utils.toArray(".word").forEach((el, index) => {
+    gsap.fromTo(el,
+      { y: 60, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 85%",
+          end: "top 20%",
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      }
+    );
+  });
+}
 
 // -------------------------
 // DISCOVER SECTION
 // -------------------------
-const discover = gsap.timeline({
+function setupDiscoverSection() {
+  const discover = gsap.timeline({
   scrollTrigger: {
     trigger: ".discover",
-    start: "top 20%",
+    start: "top 10%",
     end: "bottom top",
     scrub: 2,
+  
   }
 });
 discover.to(".slide1", { y: 220, ease: "power1.out" })
@@ -336,33 +457,136 @@ discover.to(".slide1", { y: 220, ease: "power1.out" })
         .to(".slide3", { y: 220, ease: "power1.out" })
         .to(".slide4", { y: 220, ease: "power1.out" });
 
+}
+
 // -------------------------
 // IMAGE SECTION
 // -------------------------
-gsap.to(".image-section2",{
+function setupImageSection() {
+  gsap.to(".image-section2",{
   clipPath:"circle(100% at 50% 50% )",
   scrollTrigger:{
     trigger : ".image-section > .container",
-    start : "top 20%",
+    start : "top 30%",
     end : "bottom bottom",
     scrub :2,
     pin : true 
   }
 });
+}
 
 // -------------------------
-// AUDIO
+// INITIALIZE ALL ANIMATIONS
+// -------------------------
+function initializeAnimations() {
+  setupWordAnimations();
+  setupDiscoverSection();
+  setupImageSection();
+}
+
+// Setup animations after content loads
+setTimeout(() => {
+  initializeAnimations();
+}, 6000);
+
+// -------------------------
+// AUDIO CONTROLS
 // -------------------------
 const audio = document.getElementById("bgMusic");
-const btn = document.getElementById("playPauseBtn");
-audio.volume = 0.3;
+const playPauseBtn = document.getElementById("playPauseBtn");
 
-btn.addEventListener("click", () => {
-  if (audio.paused) {
-    audio.play();
-    btn.innerHTML = `<i class="fas fa-pause text-2xl"></i>`;
-  } else {
-    audio.pause();
-    btn.innerHTML = `<i class="fas fa-play text-2xl"></i>`;
+if (audio && playPauseBtn) {
+  audio.volume = 0.3;
+  
+  playPauseBtn.addEventListener("click", () => {
+    if (audio.paused) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          playPauseBtn.innerHTML = `<i class="fas fa-pause text-2xl"></i>`;
+        }).catch(e => {
+          console.log("Audio play failed:", e);
+        });
+      }
+    } else {
+      audio.pause();
+      playPauseBtn.innerHTML = `<i class="fas fa-play text-2xl"></i>`;
+    }
+  });
+}
+
+// -------------------------
+// MOBILE OPTIMIZATIONS
+// -------------------------
+if (isMobileDevice() || isTouchDevice()) {
+  // Prevent zoom on double tap
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', function (event) {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+      event.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+
+  // Handle orientation change
+  window.addEventListener('orientationchange', function() {
+    setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 500);
+  });
+
+  // Optimize scroll performance
+  let ticking = false;
+  function updateScrollTrigger() {
+    ScrollTrigger.update();
+    ticking = false;
   }
+  
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(updateScrollTrigger);
+      ticking = true;
+    }
+  }, { passive: true });
+}
+
+// -------------------------
+// SMOOTH ANCHOR LINKS
+// -------------------------
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const targetId = this.getAttribute('href');
+    const targetElement = document.querySelector(targetId);
+    
+    if (targetElement) {
+      if (lenis) {
+        lenis.scrollTo(targetElement, { duration: 1.5 });
+      } else {
+        targetElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }
+    
+    // Close mobile menu
+    if (menu && !menu.classList.contains('hidden')) {
+      gsap.to(menu, {
+        x: "100%",
+        duration: 0.4,
+        ease: "power3.in",
+        onComplete: () => menu.classList.add("hidden"),
+      });
+    }
+  });
+});
+
+// Force final refresh
+window.addEventListener('load', function() {
+  setTimeout(() => {
+    ScrollTrigger.refresh();
+    console.log("Final ScrollTrigger refresh completed");
+  }, 1000);
 });

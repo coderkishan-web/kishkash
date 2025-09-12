@@ -6,28 +6,43 @@
 html, body {
   height: 100%;
   width: 100%;
-  overflow: hidden; /* Lenis takes control of scroll */
   background: #1E2939;
+  margin: 0;
+  padding: 0;
 }
 
 html {
-  scroll-behavior: smooth; /* won’t conflict with Lenis */
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Lenis root container */
 #lenis-root {
   min-height: 100%;
   width: 100%;
-  overflow: visible; /* keep flow inside */
+  overflow: visible;
   position: relative;
-  z-index: 0; /* baseline */
+  z-index: 0;
+}
+
+/* Mobile scroll optimizations */
+@media (max-width: 1024px) {
+  body {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+  
+  #lenis-root {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
 }
 
 /* ----------------------
-   SLIDE LOADER
+   SLIDE LOADER - FIXED
 ----------------------- */
 .slide {
-  position: sticky;
+  position: fixed;
   top: 0;
   left: -100%;
   background: #a9ff1c;
@@ -36,13 +51,17 @@ html {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-}
-.slide-active {
-  left: 0 !important;
+  width: 100vw;
+  height: 100vh;
   transition: left 1s ease;
 }
+
+.slide-active {
+  left: 0 !important;
+}
+
 .slide-up {
-  top: -200% !important;
+  top: -100vh !important;
   transition: top 1s ease;
 }
 
@@ -51,57 +70,125 @@ html {
 ----------------------- */
 #text {
   text-transform: uppercase;
+  will-change: transform;
 }
+
 .container {
   position: relative;
 }
+
 .emoji-spacing {
   margin: 0 0.15em;
 }
 
 /* ----------------------
-   CARD STACK
+   CARD STACK - MAJOR FIX
 ----------------------- */
 #card-stack {
   position: relative;
+  width: 100%;
+  height: 100%;
 }
+
 #card-stack .card {
   position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
   height: 60vh;
-  inset: 0;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Ensure cards are visible by default */
+#card-stack .card:first-child {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Mobile card adjustments */
+@media (max-width: 768px) {
+  #card-stack .card {
+    height: 70vh;
+    min-height: 500px;
+    margin: 0 5px;
+  }
+  
+  #card-stack .card .flex {
+    flex-direction: column;
+  }
+  
+  #card-stack .card img {
+    height: 200px;
+    object-fit: cover;
+  }
+}
+
+/* Card content styling */
+#card-stack .card .bg-black {
+  background: black !important;
+  width: 100%;
+  height: 100%;
+  border-radius: 1.5rem;
+}
+
+/* Fix for gradient borders */
+#card-stack .card[class*="bg-gradient-"] {
+  padding: 2px;
+}
+
+/* ----------------------
+   CASE STUDIES SECTION
+----------------------- */
+#case-studies {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding: 2rem 1rem;
 }
 
 /* ----------------------
    CUSTOM CURSOR
 ----------------------- */
-.cursor-circle {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, black, #aaff00);
-  mix-blend-mode: screen; /* glowing effect */
-  transition: transform 0.15s ease, background 0.2s ease;
-  z-index: 9999;
+@media (min-width: 1025px) {
+  .cursor-circle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, black, #aaff00);
+    mix-blend-mode: screen;
+    transition: transform 0.15s ease, background 0.2s ease;
+    z-index: 9999;
+    will-change: transform;
+  }
+
+  .cursor-active {
+    transform: translate(-50%, -50%) scale(0.7);
+    background: radial-gradient(circle, rgba(255, 0, 0, 0.9), #aaff00);
+  }
+
+  .cursor-pulse {
+    animation: pulse 0.4s ease-out;
+  }
 }
 
-.cursor-active {
-  transform: translate(-50%, -50%) scale(0.7);
-  background: radial-gradient(circle, rgba(255, 0, 0, 0.9), #aaff00);
-}
-
-.cursor-pulse {
-  animation: pulse 0.4s ease-out;
+@media (max-width: 1024px) {
+  .cursor-circle {
+    display: none !important;
+  }
 }
 
 @keyframes pulse {
@@ -122,13 +209,173 @@ html {
   font-weight: 400;
   font-style: normal;
 }
+
 .story-script-regular {
   font-family: "Story Script", sans-serif;
   font-weight: 400;
   font-style: normal;
 }
+
 .bebas-neue-regular {
   font-family: "Bebas Neue", sans-serif;
   font-weight: 400;
   font-style: normal;
 }
+
+/* ----------------------
+   MOBILE OPTIMIZATIONS
+----------------------- */
+@media (max-width: 1024px) {
+  /* Better font rendering */
+  .story-script-regular,
+  .bebas-neue-regular,
+  .asimovian-regular {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Improve touch targets */
+  button, a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, textarea, select {
+    font-size: 16px;
+  }
+}
+
+/* ----------------------
+   PERFORMANCE OPTIMIZATIONS
+----------------------- */
+.slide1, .slide2, .slide3, .slide4,
+.tech-card, .word {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* ----------------------
+   MOBILE MENU FIX
+----------------------- */
+@media (max-width: 768px) {
+  #menu {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    z-index: 60;
+    transform: translateX(100%);
+    transition: transform 0.5s ease;
+  }
+  
+  #menu.menu-active {
+    transform: translateX(0);
+  }
+}
+
+/* ----------------------
+   IMAGE SECTION FIX
+----------------------- */
+/* .image-section {
+  position: relative;
+  width: 100%;
+  height: auto;
+}
+
+.image-section .container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+} */
+
+/* .image-section2 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  clip-path: circle(20% at 50% 50%);
+  will-change: clip-path;
+} */
+
+/* ----------------------
+   DISCOVER SECTION
+----------------------- */
+.discover {
+  position: relative;
+  overflow: hidden;
+}
+
+.discover h1 {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* ----------------------
+   SCROLLBAR STYLING
+----------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1E2939;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #a9ff1c;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8ee600;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #a9ff1c #1E2939;
+}
+
+/* ----------------------
+   CONTENT VISIBILITY FIX
+----------------------- */
+#content {
+  transition: opacity 1s ease;
+}
+
+
+/* ----------------------
+   LOADING STATE
+----------------------- */
+.loading #card-stack .card {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.loaded #card-stack .card {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* ----------------------
+   DEBUG HELPERS (remove in production)
+----------------------- */
+/*
+#card-stack {
+  border: 2px solid red;
+  
+}
+
+#card-stack .card {
+  border: 1px solid yellow;
+}
+*/
