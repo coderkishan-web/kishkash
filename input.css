@@ -355,7 +355,7 @@ html {
 /* ----------------------
    LOADING STATE
 ----------------------- */
-.loading #card-stack .card {
+/* .loading #card-stack .card {
   opacity: 0;
   transform: translateY(10px);
 }
@@ -364,7 +364,7 @@ html {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.5s ease, transform 0.5s ease;
-}
+} */
 
 /* ----------------------
    DEBUG HELPERS (remove in production)
@@ -372,7 +372,7 @@ html {
 /*
 #card-stack {
   border: 2px solid red;
-  
+
 }
 
 #card-stack .card {
