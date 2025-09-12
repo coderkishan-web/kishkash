@@ -5,6 +5,11 @@
         background: #1E2939;
        
       }
+      html, body {
+  height: 100%;
+  overflow: hidden; /* required for Lenis */
+}
+
       html{
         scroll-behavior: smooth;
       }

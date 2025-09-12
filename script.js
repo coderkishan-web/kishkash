@@ -228,6 +228,8 @@ ScrollTrigger.matchMedia({
     );
   },
 });
+ScrollTrigger.refresh();
+
 
   // -------------------------
   // CIRCULAR TEXT
